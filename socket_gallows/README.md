@@ -1,5 +1,7 @@
 # SocketGallows
 
+# TODO: frontend shenanigans
+
 To start your Phoenix server:
 
   * Install dependencies with `mix deps.get`
