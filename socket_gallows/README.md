@@ -1,6 +1,6 @@
 # SocketGallows
 
-# TODO: frontend shenanigans
+## TODO: frontend shenanigans
 
 To start your Phoenix server:
 
