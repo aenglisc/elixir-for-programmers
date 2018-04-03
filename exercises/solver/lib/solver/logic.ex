@@ -57,49 +57,90 @@ defmodule Solver.Logic do
     Hangman.make_move(game, letter)
   end
 
-  defp generate_letter(tally) do
+  # should be using regexp if this were serious
+  # can't pattern match end of a lsit
+  # frequent endings (-ing, -ed, -ght etc.) can't be guessed properly
+  # it still occasionally guesses words the way it is though!
+
+  defp generate_letter(tally = %{letters: ["e", "_" | _], used: used}) do
     cond do
-      # Not being too serious of course...
-      List.first(tally.letters) == "e" && Enum.member?(@consonants -- Enum.into(tally.used, []), "n") ->
-        "n"
-      List.first(tally.letters) == "w" && Enum.member?(@consonants -- Enum.into(tally.used, []), "h") ->
-        "h"
-      List.first(tally.letters) == "e" && Enum.member?(@consonants -- Enum.into(tally.used, []), "s") ->
-        "s"
-      List.last(tally.letters) == "e" && Enum.member?(@consonants -- Enum.into(tally.used, []), "s") ->
-        "s"
-      List.last(tally.letters) == "e" && Enum.member?(@consonants -- Enum.into(tally.used, []), "z") ->
-        "z"
-      List.last(tally.letters) == "e" && Enum.member?(@consonants -- Enum.into(tally.used, []), "c") ->
-        "c"
-      List.last(tally.letters) == "n" && Enum.member?(@vowels -- Enum.into(tally.used, []), "o") ->
-        "o"
-      List.last(tally.letters) == "n" && Enum.member?(@vowels -- Enum.into(tally.used, []), "i") ->
-        "i"
-      (Enum.member?(tally.letters, "c") || Enum.member?(tally.letters, "s")) && Enum.member?(@consonants -- Enum.into(tally.used, []), "h") ->
-        "h"
-      Enum.member?(tally.letters, "c") && Enum.member?(@consonants -- Enum.into(tally.used, []), "k") ->
-        "k"
-      Enum.member?(tally.letters, "t") && Enum.member?(@consonants -- Enum.into(tally.used, []), "h") ->
-        "h"
-      Enum.member?(tally.letters, "n") && List.last(tally.letters) != "n" && Enum.member?(@consonants -- Enum.into(tally.used, []), "g") ->
-        "g"
-      (Enum.member?(tally.letters, "o") || Enum.member?(tally.letters, "a")) && Enum.member?(@vowels -- Enum.into(tally.used, []), "u") ->
-        "u"
-      List.last(tally.letters) == "t" && length(tally.letters) >= 5 && Enum.member?(@consonants -- Enum.into(tally.used, []), "g") ->
-        "g"
-      List.last(tally.letters) == "t" && length(tally.letters) >= 5 && Enum.member?(tally.letters, "g") && Enum.member?(@consonants -- Enum.into(tally.used, []), "h") ->
-        "h"
-      Enum.member?(tally.letters, "y") && Enum.member?(@consonants -- Enum.into(tally.used, []), "x") ->
-        "x"
-      Enum.member?(tally.letters, "p") && Enum.member?(@consonants -- Enum.into(tally.used, []), "h") ->
-        "h"
-      tally.turns_left < 3 && List.last(tally.letters) == "_" && Enum.member?(@vowels -- Enum.into(tally.used, []), "y") ->
-        "y"
-      tally.turns_left < 3 && List.last(tally.letters) == "_" && Enum.member?(@consonants -- Enum.into(tally.used, []), "d") ->
-        "d"
-      true ->
-        Enum.random(List.wrap(List.first(@vowels -- Enum.into(tally.used, []))) ++ List.wrap(List.first(@consonants -- Enum.into(tally.used, []))))
+      "n" not in used -> "n"
+      "s" not in used -> "s"
+      "m" not in used -> "m"
+      true -> generate_frequent(tally)
     end
+  end
+
+  defp generate_letter(tally = %{letters: ["c", "_" | _], used: used}) do
+    cond do
+      "h" not in used -> "h"
+      true -> generate_frequent(tally)
+    end
+  end
+
+  defp generate_letter(tally = %{letters: ["t", "_" | _], used: used}) do
+    cond do
+      "h" not in used -> "h"
+      true -> generate_frequent(tally)
+    end
+  end
+
+  defp generate_letter(tally = %{letters: ["s", "_" | _], used: used}) do
+    cond do
+      "h" not in used -> "h"
+      true -> generate_frequent(tally)
+    end
+  end
+
+  defp generate_letter(tally = %{letters: ["i", "_" | _], used: used}) do
+    cond do
+      "n" not in used -> "n"
+      "m" not in used -> "m"
+      true -> generate_frequent(tally)
+    end
+  end
+
+  defp generate_letter(tally = %{letters: ["i", "n", "_" | _], used: used}) do
+    cond do
+      "q" not in used -> "q"
+      true -> generate_frequent(tally)
+    end
+  end
+
+  defp generate_letter(tally = %{letters: ["_", "e" | _], used: used}) do
+    cond do
+      "r" not in used -> "r"
+      "d" not in used -> "d"
+      true -> generate_frequent(tally)
+    end
+  end
+
+  defp generate_letter(tally = %{letters: ["_", "h" | _], used: used}) do
+    cond do
+      "w" not in used -> "w"
+      true -> generate_frequent(tally)
+    end
+  end
+
+  defp generate_letter(tally = %{letters: ["w", "_" | _], used: used}) do
+    cond do
+      "h" not in used -> "h"
+      true -> generate_frequent(tally)
+    end
+  end
+
+  defp generate_letter(tally = %{letters: letters, used: used}) do
+    cond do
+      "g" in letters and "h" not in used -> "h"
+      "h" in letters and "g" not in used -> "g"
+      "n" in letters and "g" not in used -> "g"
+      true -> generate_frequent(tally)
+    end
+  end
+
+  defp generate_frequent(tally) do
+      frequent_vowel = List.wrap(List.first(@vowels -- tally.used))
+      frequent_consonant = List.wrap(List.first(@consonants -- tally.used))
+      Enum.random(frequent_vowel ++ frequent_consonant)
   end
 end
